@@ -1,4 +1,4 @@
-from brokers.rabbitmq_broker import RabbitMQBroker
+from ..brokers.rabbitmq_broker import RabbitMQBroker
 
 def main():
     broker = RabbitMQBroker()
