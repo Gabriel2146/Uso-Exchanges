@@ -1,15 +1,24 @@
+# consumer_email.py
+
 from queue_system.brokers.rabbitmq_broker import RabbitMQBroker
-import json
 
 def process_message(ch, method, properties, body):
-    message = json.loads(body)
-    print(f"Mensaje recibido en Consumer Email: {message}")
+    print(f"Recibido mensaje: {body.decode()}")
 
 def main():
     broker = RabbitMQBroker()
     broker.connect()
 
-    broker.consume("email_queue", process_message)
+    # Declarar la cola desde la que vamos a consumir mensajes
+    broker.channel.queue_declare(queue="email_queue")
+
+    # Consumir los mensajes de la cola
+    broker.channel.basic_consume(queue="email_queue", on_message_callback=process_message, auto_ack=True)
+
+    print("Esperando mensajes...")
+
+    # Iniciar el consumo de los mensajes
+    broker.channel.start_consuming()
 
 if __name__ == "__main__":
     main()
