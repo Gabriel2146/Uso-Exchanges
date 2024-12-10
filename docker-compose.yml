@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_Exchanges
+    ports:
+      - "5672:5672"  # Puerto para comunicación con los clientes
+      - "15672:15672" # Puerto para el panel de administración
+    environment:
+      RABBITMQ_DEFAULT_USER: GabrielP
+      RABBITMQ_DEFAULT_PASS: 2146
