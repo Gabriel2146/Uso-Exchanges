@@ -1,17 +1,16 @@
-import pika
+from queue_system.brokers.rabbitmq_broker import RabbitMQBroker
+import json
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
+    # Crear la instancia del broker y conectar
+    broker = RabbitMQBroker()
+    broker.connect()
 
-    # Declare the fanout exchange
-    channel.exchange_declare(exchange='notifications_fanout', exchange_type='fanout')
+    # El mensaje que se va a publicar
+    message = {"text": "Este es un mensaje de prueba para Fanout Exchange"}
 
-    message = "General Notification: Hello to all consumers!"
-    channel.basic_publish(exchange='notifications_fanout', routing_key='', body=message)
-    print(f"Sent: {message}")
-
-    connection.close()
+    # Publicar el mensaje en el exchange 'logs' (fanout)
+    broker.publish("logs", "", message)
 
 if __name__ == "__main__":
     main()

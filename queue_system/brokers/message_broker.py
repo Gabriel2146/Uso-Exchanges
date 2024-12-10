@@ -2,9 +2,13 @@ from abc import ABC, abstractmethod
 
 class MessageBroker(ABC):
     @abstractmethod
-    def publish(self, exchange: str, routing_key: str, message: str):
+    def connect(self):
         pass
 
     @abstractmethod
-    def consume(self, exchange: str, queue: str, routing_key: str, callback):
+    def publish(self, exchange, routing_key, message):
+        pass
+
+    @abstractmethod
+    def consume(self, queue, callback):
         pass

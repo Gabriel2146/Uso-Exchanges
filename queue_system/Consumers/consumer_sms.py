@@ -1,24 +1,15 @@
-import pika
+from queue_system.brokers.rabbitmq_broker import RabbitMQBroker
+import json
 
-def callback(ch, method, properties, body):
-    print(f"Received SMS notification: {body.decode()}")
+def process_message(ch, method, properties, body):
+    message = json.loads(body)
+    print(f"Mensaje recibido en Consumer SMS: {message}")
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
+    broker = RabbitMQBroker()
+    broker.connect()
 
-    # Declare the direct exchange
-    channel.exchange_declare(exchange='notifications_direct', exchange_type='direct')
-
-    # Declare a queue and bind it to the exchange with the routing key 'sms'
-    queue_name = 'sms_notifications'
-    channel.queue_declare(queue=queue_name)
-    channel.queue_bind(exchange='notifications_direct', queue=queue_name, routing_key='sms')
-
-    print("Waiting for SMS notifications. To exit press CTRL+C")
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-
-    channel.start_consuming()
+    broker.consume("sms_queue", process_message)
 
 if __name__ == "__main__":
     main()
