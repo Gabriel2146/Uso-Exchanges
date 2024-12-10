@@ -1,47 +1,43 @@
 import pika
-import json
-from queue_system.brokers.message_broker import MessageBroker
 
-class RabbitMQBroker(MessageBroker):
+class RabbitMQBroker:
     def __init__(self):
         self.connection = None
         self.channel = None
 
     def connect(self):
-        """Conectar a RabbitMQ."""
         try:
-            self.connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
+            # Usar las credenciales personalizadas
+            credentials = pika.PlainCredentials('GabrielP', '2146')  # Cambiado aquí
+            self.connection = pika.BlockingConnection(
+                pika.ConnectionParameters(
+                    'localhost', 
+                    5672,  # Puerto por defecto
+                    '/',    # Vhost predeterminado
+                    credentials  # Usar las nuevas credenciales
+                )
+            )
             self.channel = self.connection.channel()
-            print("Conexión establecida con RabbitMQ.")
+            print("Conexión a RabbitMQ exitosa.")
         except Exception as e:
             print(f"Error al conectar a RabbitMQ: {e}")
-            raise
 
     def publish(self, exchange, routing_key, message):
-        """Publicar un mensaje a un exchange especificado."""
         try:
-            self.channel.exchange_declare(exchange=exchange, exchange_type='direct' if routing_key else 'fanout')
+            # Asegurarse de que el exchange existe
+            self.channel.exchange_declare(exchange=exchange, exchange_type='direct')
+
+            # Publicar el mensaje en el exchange
             self.channel.basic_publish(
                 exchange=exchange,
                 routing_key=routing_key,
-                body=json.dumps(message)
+                body=message
             )
-            print(f"Mensaje publicado en {exchange} con routing_key {routing_key}.")
+            print(f"Mensaje publicado en el exchange {exchange} con routing_key {routing_key}")
         except Exception as e:
             print(f"Error al publicar el mensaje: {e}")
 
-    def consume(self, queue, callback):
-        """Consumir mensajes de una cola."""
-        try:
-            # Asegurarse de que la cola esté declarada antes de consumir
-            self.channel.queue_declare(queue=queue, durable=True)  # durable=True asegura que la cola sobreviva a reinicios
-            print(f"Esperando mensajes de la cola: {queue}...")
-            self.channel.basic_consume(
-                queue=queue,
-                on_message_callback=lambda ch, method, properties, body: callback(ch, method, properties, body),
-                auto_ack=True  # Auto-confirmar recepción de los mensajes
-            )
-            self.channel.start_consuming()
-        except Exception as e:
-            print(f"Error al consumir mensajes: {e}")
-            raise
+    def close(self):
+        if self.connection:
+            self.connection.close()
+            print("Conexión cerrada.")
